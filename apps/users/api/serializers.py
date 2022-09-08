@@ -6,3 +6,17 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta: 
         model = User
         fields = '__all__'
+
+class TestUserSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length = 200)
+    email = serializers.EmailField()
+
+    def validate_email(self,value):
+        return value
+    
+    def validate_name(self,value):
+        return value
+
+    def validate(self,value):
+        return value
+        
