@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
-from apps.users.api.serializers import UserSerializer, TestUserSerializer
+from apps.users.api.serializers import UserSerializer, UserListSerializer
 from apps.users.models import User
 
 
@@ -11,21 +11,13 @@ def user_api_view(request):
 
     #list
     if request.method == 'GET':
-        users = User.objects.all()
-        users_serializer = UserSerializer(users,many = True)
-        
-        """test_data = {
-            'name':'develop',
-            'email':'develop@gmail.com'
-        }
-        test_user = TestUserSerializer(data = test_data)
-        test_user.is_valid() """       
-        
+        users = User.objects.all().values('id','username','email')
+        users_serializer = UserListSerializer(users,many = True) 
         return Response(users_serializer.data,status = status.HTTP_200_OK)
 
     #create
     elif request.method == 'POST':
-        user_serializer = TestUserSerializer(data = request.data)
+        user_serializer = UserSerializer(data = request.data)
         if user_serializer.is_valid():
             user_serializer.save()
             return Response({'message':'Usuario creado correctamente.'}, status = status.HTTP_201_CREATED)
