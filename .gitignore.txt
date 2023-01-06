@@ -1,6 +1,12 @@
+apps/users/__pycache__/
+apps/users/api/__pycache__/
+apps/users/migrations/__pycache__/
+photo_rest_api/__pycache__/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*/__pycache__/
 
 # C extensions
 *.so
