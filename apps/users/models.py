@@ -32,6 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     image = models.ImageField('Imagen de perfil', upload_to='perfil/', max_length=255, null=True, blank = True)
     is_active = models.BooleanField(default = True)
     is_staff = models.BooleanField(default = False)
+    email_validated = models.BooleanField(default = False)
     historical = HistoricalRecords()
     objects = UserManager()
 
@@ -44,3 +45,27 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'{self.name} {self.last_name}'
+    
+class OTPCode(models.Model):
+    OTP_TYPE_CHOICES = (
+        ('email', 'Email'),
+        ('phone', 'Phone'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='otp_codes')
+    code = models.CharField(max_length=6)
+    otp_type = models.CharField(max_length=10, choices=OTP_TYPE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            # Por defecto, 10 minutos de validez
+            self.expires_at = timezone.now() + timedelta(minutes=10)
+        super().save(*args, **kwargs)
+
+    def is_valid(self):
+        return timezone.now() < self.expires_at
+
+    def __str__(self):
+        return f'{self.user.email} - {self.code} - {self.otp_type}'

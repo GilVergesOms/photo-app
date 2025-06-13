@@ -1,6 +1,7 @@
 from dataclasses import fields
 from rest_framework import serializers
 from apps.users.models import User
+import re
 
 class UserSerializer(serializers.ModelSerializer):
     #Define que campos se van a usar en un update o create
@@ -21,35 +22,68 @@ class UserListSerializer(serializers.ModelSerializer):
             'email': instance['email']
         }
 
-
-"""
-class TestUserSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length = 40)
+class AdvancedUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    username = serializers.CharField(max_length=40)
     email = serializers.EmailField()
+    name = serializers.CharField(max_length=40)
+    last_name = serializers.CharField(max_length=80)
 
-    def validate_email(self,value):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'name', 'last_name', 'password']
+
+    def validate_username(self, value):
+        value = value.strip()
+        if len(value) < 5:
+            raise serializers.ValidationError("El username debe tener mínimo 5 caracteres.")
+        if len(value) > 40:
+            raise serializers.ValidationError("El nombre de usuario no debe superar los 40 caracteres.")
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("Este nombre de usuario ya está registrado.")
+        return value
+
+    def validate_email(self, value):
+        value = value.strip().lower()
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Este correo electrónico ya está registrado.")
+        return value
+
+    def validate_name(self, value):
+        value = value.strip()
+        if len(value) < 2:
+            raise serializers.ValidationError("El nombre debe tener mínimo 2 caracteres.")
+        if len(value) > 40:
+            raise serializers.ValidationError("El nombre no debe superar los 40 caracteres.")
+        if not re.match(r"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$", value):
+            raise serializers.ValidationError("El nombre contiene caracteres inválidos.")
+        return value
+
+    def validate_last_name(self, value):
+        value = value.strip()
+        if len(value) < 2:
+            raise serializers.ValidationError("Los apellidos deben tener mínimo 2 caracteres.")
+        if len(value) > 80:
+            raise serializers.ValidationError("Los apellidos no deben superar los 80 caracteres.")
+        if not re.match(r"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]+$", value):
+            raise serializers.ValidationError("Los apellidos contienen caracteres inválidos.")
         return value
     
-    def validate_name(self,value):
-        ### if "g" in value:
-        ###    raise serializers.ValidationError('Error, la letra G no está permitida en el nombre.');
-        ### return value
-
-    def validate(self,value):
+    def validate_password(self, value):
+        # Al menos 8 caracteres, una mayúscula, una minúscula y un dígito
+        if len(value) < 8:
+            raise serializers.ValidationError("La contraseña debe tener al menos 8 caracteres.")
+        if not re.search(r"[A-Z]", value):
+            raise serializers.ValidationError("La contraseña debe contener al menos una letra mayúscula.")
+        if not re.search(r"[a-z]", value):
+            raise serializers.ValidationError("La contraseña debe contener al menos una letra minúscula.")
+        if not re.search(r"[0-9]", value):
+            raise serializers.ValidationError("La contraseña debe contener al menos un número.")
         return value
 
     def create(self, validated_data):
-        return User.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get('name',instance.name)
-        instance.email = validated_data.get('email',instance.email)
-        instance.save()
-        return instance
-    
-    ### Esinteresante sobreescibir el metodo save() del serializer
-    ### si no queremos que s ejecute el update. Por ejemplo si solo queremos que pase
-    ### una validación. 
-    ### def save(self):
-    ###    send_mail()
-    """
+        password = validated_data.pop('password')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
