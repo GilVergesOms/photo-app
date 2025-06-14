@@ -88,5 +88,5 @@ class AdvancedUserSerializer(serializers.ModelSerializer):
         user = User(**validated_data)
         user.set_password(password)
         user.save()
-        create_otp(user)  # Genera y guarda el OTP al crear el usuario
+        #create_otp(user)  # Genera y guarda el OTP al crear el usuario
         return user

@@ -24,6 +24,7 @@ pip install django-simple-history
 
 Entrar al servidor:
 http://localhost:8000/user/user/
+http://localhost:8000/user/login/
 
 Post para crear usuarios:
 {
