@@ -20,8 +20,8 @@ def user_api_view(request):
         user_serializer = AdvancedUserSerializer(data = request.data)
         #UserSerializer(data = request.data)
         if user_serializer.is_valid():
-            user_serializer.save()
-            return Response({'message':'Usuario creado correctamente.'}, status = status.HTTP_201_CREATED)
+            user = user_serializer.save()
+            return Response({"id": user.id, "username": user.username, "email": user.email, 'message':'Usuario creado correctamente.'}, status = status.HTTP_201_CREATED)
         return Response({'errors': user_serializer.errors}, status = status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET','PUT','DELETE'])

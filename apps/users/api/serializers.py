@@ -1,6 +1,7 @@
 from dataclasses import fields
 from rest_framework import serializers
-from apps.users.models import User
+from apps.users.models import User, OTPCode
+from apps.users.utils.utils import * # Importa la función de generación de OTP
 import re
 
 class UserSerializer(serializers.ModelSerializer):
@@ -28,10 +29,11 @@ class AdvancedUserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
     name = serializers.CharField(max_length=40)
     last_name = serializers.CharField(max_length=80)
+    id = serializers.ReadOnlyField() 
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'name', 'last_name', 'password']
+        fields = ['id', 'username', 'email', 'name', 'last_name', 'password']
 
     def validate_username(self, value):
         value = value.strip()
@@ -86,4 +88,5 @@ class AdvancedUserSerializer(serializers.ModelSerializer):
         user = User(**validated_data)
         user.set_password(password)
         user.save()
+        create_otp(user)  # Genera y guarda el OTP al crear el usuario
         return user
